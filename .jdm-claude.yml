@@ -1,0 +1,48 @@
+# jdm-claude[bot] config for realjamesmtz/tesla-HA. Drafted by onboarding; edit freely.
+# The gate reads this file from the default branch only, so a PR can't change its own checks.
+# Docs: https://github.com/realjamesmtz/jdm-claude#repo-config
+version: 1
+
+checks:
+  # mini/checks on Mac mini 3 for every PR into the branches below, and on each new tip.
+  enabled: true
+  # branches: [main]   # default: the release head and base
+  install: "python3 -m venv tmp/gate/venv && tmp/gate/venv/bin/pip install -q -e ."
+  # Steps run in order in a fresh worktree; the first failure stops the run.
+  # `tests: true` marks the step whose failing test files get one retry alone (flaky_retry).
+  # {{ios_simulator}} is replaced with an available iPhone simulator id on Mini 3.
+  # Signing, archiving, notarizing and uploads are refused on Mini 3.
+  steps:
+    - name: test
+      run: "tmp/gate/venv/bin/python -m pytest -q"
+      tests: true
+  flaky_retry:
+    runner: none   # vitest | jest | none
+  timeout_minutes: 60
+  # ios: true makes Mini 3 run this repo's checks only when no other Xcode job is running.
+  ios: false
+  # Write ~/oc-gate/repos/<owner>/<repo>/passed/<tree sha> on a clean pass (for deploy runners).
+  pass_markers: false
+
+review:
+  # Automatic Claude review: release (PRs into the release base), all (every PR), or off.
+  # `@jdm-claude review` on any PR works either way.
+  auto: release
+  rules: ["CONTRIBUTING.md"]   # files Claude reads as the repo's rules
+
+fix:
+  # `@jdm-claude fix [sonnet|fable]` applies the latest review in a T3 thread on Mini 3.
+  enabled: true
+  # t3_project: ~/Repos/<name>   # default: the T3 project at ~/Repos/<repo name>
+
+release:
+  # On merge of a release PR: annotated tag vX.Y.Z on the merge commit and a GitHub Release.
+  tag: false
+  base: main
+  head: null   # null = main only: every PR merged into base is a release
+  bump: minor   # default bump; labels release:major / release:patch override it
+
+tickets:
+  # A head branch starting with KEY-123 gets that OpenCortex ticket as the review spec.
+  prefixes: []
+
